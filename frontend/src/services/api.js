@@ -1,4 +1,4 @@
-const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/$/, '');
+const API_BASE_URL = 'https://arogyasync-backend.onrender.com';
 const TOKEN_STORAGE_KEY = 'jwt_token';
 
 const buildUrl = (path) => `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
