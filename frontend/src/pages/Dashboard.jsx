@@ -1,5 +1,5 @@
-
 import Chart from 'react-apexcharts';
+import { useNavigate } from 'react-router-dom';
 import { useSync } from '../context/useSyncContext';
 import { 
   Users, 
@@ -17,13 +17,10 @@ import {
   UserPlus
 } from 'lucide-react';
 
-const mockNames = ['Aarav Mehta', 'Priya Patel', 'Amit Sharma', 'Neha Joshi', 'Rajesh Sen', 'Kiran Verma', 'Vijay Gupta', 'Sunita Rao'];
-const mockDiagnoses = ['Fever', 'Cough & Cold', 'Body Pain', 'Diabetes', 'Hypertension'];
-const mockMedicines = ['Paracetamol', 'Amoxicillin', 'Vitamin B12', 'Calcium', 'ORS'];
-const mockVaccines = ['MMR Dose 2', 'BCG', 'Hepatitis B', 'DPT Booster'];
-
 const Dashboard = () => {
+  const navigate = useNavigate();
   const {
+    isOnline,
     pendingSync,
     lastSyncTime,
     totalPatients,
@@ -32,43 +29,82 @@ const Dashboard = () => {
     consultationsCount,
     prescriptionsCount,
     vaccinationsCount,
-    addPatient,
-    addConsultation,
-    addPrescription,
-    addVaccination,
+    patientsList,
+    consultationsList,
+    prescriptionsList,
+    vaccinationsList,
     performSync,
-    isSyncing
+    isSyncing,
+    showToast,
+    isLoadingData,
+    dataError
   } = useSync();
 
-  // Pick random element from array
-  const randomPick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
   const handleQuickAction = (type) => {
-    const randomName = randomPick(mockNames);
-    if (type === 'patient') {
-      addPatient({
-        name: randomName,
-        age: Math.floor(Math.random() * 50) + 15,
-        gender: Math.random() > 0.5 ? 'Female' : 'Male'
-      });
-    } else if (type === 'consultation') {
-      addConsultation({
-        patientName: randomName,
-        diagnosis: randomPick(mockDiagnoses)
-      });
-    } else if (type === 'prescription') {
-      addPrescription({
-        patientName: randomName,
-        medicine: randomPick(mockMedicines),
-        dosage: '500mg - BD - 5 Days'
-      });
-    } else if (type === 'vaccination') {
-      addVaccination({
-        patientName: randomName,
-        vaccine: randomPick(mockVaccines),
-        batch: `VC${Math.floor(Math.random() * 8000) + 1000}`
-      });
+    if (isLoadingData) {
+      showToast('Loading live records from the server. Please wait.', 'success');
+      return;
     }
+
+    if (dataError) {
+      showToast('Live data is currently unavailable. Please retry once the backend is reachable.', 'error');
+      return;
+    }
+
+    if (type === 'patient') {
+      navigate('/patients');
+      return;
+    }
+
+    if (type === 'consultation') {
+      if (patientsList.length === 0) {
+        showToast('No patients are available yet. Create patient data first.', 'error');
+        return;
+      }
+      navigate('/consultations');
+      return;
+    }
+
+    if (type === 'prescription') {
+      if (consultationsList.length === 0) {
+        showToast('No consultations are available yet. Create a consultation first.', 'error');
+        return;
+      }
+      navigate('/prescriptions');
+      return;
+    }
+
+    if (type === 'vaccination') {
+      if (patientsList.length === 0) {
+        showToast('No patients are available yet. Create patient data first.', 'error');
+        return;
+      }
+      navigate('/vaccinations');
+    }
+  };
+
+  const getQuickActionState = (type) => {
+    if (isLoadingData) {
+      return { disabled: true, hint: 'Loading live records…' };
+    }
+
+    if (dataError) {
+      return { disabled: true, hint: 'Live data unavailable' };
+    }
+
+    if (type === 'consultation' && patientsList.length === 0) {
+      return { disabled: true, hint: 'Create a patient first' };
+    }
+
+    if (type === 'prescription' && consultationsList.length === 0) {
+      return { disabled: true, hint: 'Create a consultation first' };
+    }
+
+    if (type === 'vaccination' && patientsList.length === 0) {
+      return { disabled: true, hint: 'Create a patient first' };
+    }
+
+    return { disabled: false, hint: 'Opens the live records screen' };
   };
 
   // Sparkline Chart configs
@@ -107,6 +143,71 @@ const Dashboard = () => {
     tooltip: { x: { show: false } },
     ...minMax
   });
+
+  // Calculate dynamic distributions from real backend lists
+  const maleCount = patientsList.filter(p => p.gender === 'Male').length;
+  const femaleCount = patientsList.filter(p => p.gender === 'Female').length;
+  const otherCount = patientsList.filter(p => p.gender !== 'Male' && p.gender !== 'Female').length;
+  const totalGender = maleCount + femaleCount + otherCount;
+  
+  const malePercent = totalGender ? Math.round((maleCount / totalGender) * 100) : 0;
+  const femalePercent = totalGender ? Math.round((femaleCount / totalGender) * 100) : 0;
+  const otherPercent = totalGender ? Math.round((otherCount / totalGender) * 100) : 0;
+
+  const age0_18 = patientsList.filter(p => Number(p.age) <= 18).length;
+  const age19_40 = patientsList.filter(p => Number(p.age) > 18 && Number(p.age) <= 40).length;
+  const age41_60 = patientsList.filter(p => Number(p.age) > 40 && Number(p.age) <= 60).length;
+  const age60Plus = patientsList.filter(p => Number(p.age) > 60).length;
+  const totalAge = age0_18 + age19_40 + age41_60 + age60Plus;
+
+  const age0_18_Percent = totalAge ? Math.round((age0_18 / totalAge) * 100) : 0;
+  const age19_40_Percent = totalAge ? Math.round((age19_40 / totalAge) * 100) : 0;
+  const age41_60_Percent = totalAge ? Math.round((age41_60 / totalAge) * 100) : 0;
+  const age60Plus_Percent = totalAge ? Math.round((age60Plus / totalAge) * 100) : 0;
+
+  // Top Diagnoses distribution
+  const diagnosesCounts = {};
+  consultationsList.forEach(c => {
+    const d = c.diagnosis || 'General Checkup';
+    diagnosesCounts[d] = (diagnosesCounts[d] || 0) + 1;
+  });
+  const sortedDiagnoses = Object.entries(diagnosesCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  const diagnosesCategories = sortedDiagnoses.length ? sortedDiagnoses.map(x => x[0]) : ['No Data'];
+  const diagnosesData = sortedDiagnoses.length ? sortedDiagnoses.map(x => x[1]) : [0];
+
+  // Top Medicine usage distribution
+  const medicineCounts = {};
+  prescriptionsList.forEach(p => {
+    const m = p.medicine || 'Unknown';
+    medicineCounts[m] = (medicineCounts[m] || 0) + 1;
+  });
+  const sortedMedicines = Object.entries(medicineCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  const medicinesCategories = sortedMedicines.length ? sortedMedicines.map(x => x[0]) : ['No Data'];
+  const medicinesData = sortedMedicines.length ? sortedMedicines.map(x => x[1]) : [0];
+
+  // Historical 7 days daily trends
+  const get7DaysTrend = (list) => {
+    const result = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toLocaleDateString('en-GB'); // "DD/MM/YYYY"
+      const count = list.filter(item => item.timestamp === dateStr).length;
+      result.push(count);
+    }
+    return result;
+  };
+
+  const patientsTrend = get7DaysTrend(patientsList);
+  const consultationsTrend = get7DaysTrend(consultationsList);
+  const prescriptionsTrend = get7DaysTrend(prescriptionsList);
+  const vaccinationsTrend = get7DaysTrend(vaccinationsList);
 
   return (
     <div className="dashboard-body">
@@ -151,7 +252,7 @@ const Dashboard = () => {
             <RefreshCw />
           </div>
           <div className="stat-info">
-            <span class="stat-label">Pending Sync</span>
+            <span className="stat-label">Pending Sync</span>
             <div className="stat-number-wrapper">
               <span className="stat-number">{pendingSync}</span>
             </div>
@@ -203,7 +304,7 @@ const Dashboard = () => {
                 </div>
                 <Chart 
                   options={getSparklineConfig('#10b981')} 
-                  series={[{ name: 'New Patients', data: [12, 18, 14, 25, 22, 29, patientsCount] }]} 
+                  series={[{ name: 'New Patients', data: patientsTrend }]} 
                   type="area" 
                   className="mini-chart"
                 />
@@ -223,7 +324,7 @@ const Dashboard = () => {
                 </div>
                 <Chart 
                   options={getSparklineConfig('#3b82f6')} 
-                  series={[{ name: 'Consultations', data: [8, 15, 12, 20, 24, 16, consultationsCount] }]} 
+                  series={[{ name: 'Consultations', data: consultationsTrend }]} 
                   type="area" 
                   className="mini-chart"
                 />
@@ -243,7 +344,7 @@ const Dashboard = () => {
                 </div>
                 <Chart 
                   options={getSparklineConfig('#f97316')} 
-                  series={[{ name: 'Prescriptions', data: [5, 9, 7, 12, 11, 14, prescriptionsCount] }]} 
+                  series={[{ name: 'Prescriptions', data: prescriptionsTrend }]} 
                   type="area" 
                   className="mini-chart"
                 />
@@ -263,7 +364,7 @@ const Dashboard = () => {
                 </div>
                 <Chart 
                   options={getSparklineConfig('#8b5cf6')} 
-                  series={[{ name: 'Vaccinations', data: [2, 5, 4, 7, 6, 8, vaccinationsCount] }]} 
+                  series={[{ name: 'Vaccinations', data: vaccinationsTrend }]} 
                   type="area" 
                   className="mini-chart"
                 />
@@ -292,7 +393,7 @@ const Dashboard = () => {
                     dataLabels: { enabled: false },
                     tooltip: { enabled: true }
                   }}
-                  series={[684, 542, 22]}
+                  series={totalGender ? [maleCount, femaleCount, otherCount] : [0, 0, 0]}
                   type="donut"
                   className="donut-chart-container"
                 />
@@ -301,21 +402,21 @@ const Dashboard = () => {
                     <span className="legend-dot male"></span>
                     <div className="legend-info">
                       <span className="legend-label">Male</span>
-                      <span className="legend-val">684 <span class="percent">(55%)</span></span>
+                      <span className="legend-val">{maleCount} <span className="percent">({malePercent}%)</span></span>
                     </div>
                   </div>
                   <div className="legend-item">
                     <span className="legend-dot female"></span>
                     <div className="legend-info">
                       <span className="legend-label">Female</span>
-                      <span className="legend-val">542 <span class="percent">(43%)</span></span>
+                      <span className="legend-val">{femaleCount} <span className="percent">({femalePercent}%)</span></span>
                     </div>
                   </div>
                   <div className="legend-item">
                     <span className="legend-dot other"></span>
                     <div className="legend-info">
                       <span className="legend-label">Other</span>
-                      <span className="legend-val">22 <span class="percent">(2%)</span></span>
+                      <span className="legend-val">{otherCount} <span className="percent">({otherPercent}%)</span></span>
                     </div>
                   </div>
                 </div>
@@ -340,7 +441,7 @@ const Dashboard = () => {
                     dataLabels: { enabled: false },
                     tooltip: { enabled: true }
                   }}
-                  series={[256, 512, 328, 152]}
+                  series={totalAge ? [age0_18, age19_40, age41_60, age60Plus] : [0, 0, 0, 0]}
                   type="donut"
                   className="donut-chart-container"
                 />
@@ -349,28 +450,28 @@ const Dashboard = () => {
                     <span className="legend-dot age1"></span>
                     <div className="legend-info">
                       <span className="legend-label">0-18</span>
-                      <span className="legend-val">256 <span class="percent">(21%)</span></span>
+                      <span className="legend-val">{age0_18} <span className="percent">({age0_18_Percent}%)</span></span>
                     </div>
                   </div>
                   <div className="legend-item">
                     <span className="legend-dot age2"></span>
                     <div className="legend-info">
                       <span className="legend-label">19-40</span>
-                      <span className="legend-val">512 <span class="percent">(41%)</span></span>
+                      <span className="legend-val">{age19_40} <span className="percent">({age19_40_Percent}%)</span></span>
                     </div>
                   </div>
                   <div className="legend-item">
                     <span className="legend-dot age3"></span>
                     <div className="legend-info">
                       <span className="legend-label">41-60</span>
-                      <span className="legend-val">328 <span class="percent">(26%)</span></span>
+                      <span className="legend-val">{age41_60} <span className="percent">({age41_60_Percent}%)</span></span>
                     </div>
                   </div>
                   <div className="legend-item">
                     <span className="legend-dot age4"></span>
                     <div className="legend-info">
                       <span className="legend-label">60+</span>
-                      <span className="legend-val">152 <span class="percent">(12%)</span></span>
+                      <span className="legend-val">{age60Plus} <span className="percent">({age60Plus_Percent}%)</span></span>
                     </div>
                   </div>
                 </div>
@@ -398,42 +499,42 @@ const Dashboard = () => {
                         dataLabels: { position: 'end' }
                       }
                     },
-                  dataLabels: {
-                enabled: true,
-                offsetX: 12,
-                  style: {
-              fontSize: '11px',
-              fontWeight: 600,
-            colors: ['#334155']
-                   }
-                  },
-                   grid: {
-                          show: false,
-                             padding: {
-                              top: 0,
-                             bottom: 0,
-                              left: 40,
-                              right: 10
-                                    }
-                                     },
+                    dataLabels: {
+                      enabled: true,
+                      offsetX: 12,
+                      style: {
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        colors: ['#334155']
+                      }
+                    },
+                    grid: {
+                      show: false,
+                      padding: {
+                        top: 0,
+                        bottom: 0,
+                        left: 40,
+                        right: 10
+                      }
+                    },
                     xaxis: {
-                      categories: ['Fever', 'Cough & Cold', 'Body Pain', 'Diabetes', 'Hypertension'],
+                      categories: diagnosesCategories,
                       labels: { show: false },
                       axisBorder: { show: false },
                       axisTicks: { show: false }
                     },
                     yaxis: {
-  labels: {
-    maxWidth: 140,
-    style: {
-      fontSize: '11px',
-      fontWeight: 500,
-      colors: '#475569'
-    }
-  }
-}
+                      labels: {
+                        maxWidth: 140,
+                        style: {
+                          fontSize: '11px',
+                          fontWeight: 500,
+                          colors: '#475569'
+                        }
+                      }
+                    }
                   }}
-                  series={[{ name: 'Cases', data: [28, 20, 16, 10, 8] }]}
+                  series={[{ name: 'Cases', data: diagnosesData }]}
                   type="bar"
                   height={140}
                 />
@@ -461,42 +562,42 @@ const Dashboard = () => {
                         dataLabels: { position: 'end' }
                       }
                     },
-                   dataLabels: {
-  enabled: true,
-  offsetX: 12,
-  style: {
-    fontSize: '11px',
-    fontWeight: 600,
-    colors: ['#334155']
-  }
-},
-                  grid: {
-  show: false,
-  padding: {
-    top: 0,
-    bottom: 0,
-    left: 60,
-    right: 10
-  }
-},
+                    dataLabels: {
+                      enabled: true,
+                      offsetX: 12,
+                      style: {
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        colors: ['#334155']
+                      }
+                    },
+                    grid: {
+                      show: false,
+                      padding: {
+                        top: 0,
+                        bottom: 0,
+                        left: 60,
+                        right: 10
+                      }
+                    },
                     xaxis: {
-                      categories: ['Paracetamol', 'Amoxicillin', 'Vit B12', 'Calcium', 'ORS'],
+                      categories: medicinesCategories,
                       labels: { show: false },
                       axisBorder: { show: false },
                       axisTicks: { show: false }
                     },
-               yaxis: {
-  labels: {
-    maxWidth: 150,
-    style: {
-      fontSize: '11px',
-      fontWeight: 500,
-      colors: '#475569'
-    }
-  }
-}
+                    yaxis: {
+                      labels: {
+                        maxWidth: 150,
+                        style: {
+                          fontSize: '11px',
+                          fontWeight: 500,
+                          colors: '#475569'
+                        }
+                      }
+                    }
                   }}
-                  series={[{ name: 'Units Given', data: [32, 24, 18, 14, 10] }]}
+                  series={[{ name: 'Units Given', data: medicinesData }]}
                   type="bar"
                   height={140}
                 />
@@ -517,7 +618,7 @@ const Dashboard = () => {
               <div className="card-body">
                 <Chart 
                   options={getTrendLineConfig('#3b82f6')} 
-                  series={[{ name: 'Consultations', data: [15, 22, 18, 28, 32, 24, consultationsCount] }]} 
+                  series={[{ name: 'Consultations', data: consultationsTrend }]} 
                   type="line"
                   height={110}
                 />
@@ -535,7 +636,7 @@ const Dashboard = () => {
               <div className="card-body">
                 <Chart 
                   options={getTrendLineConfig('#f97316')} 
-                  series={[{ name: 'Prescriptions', data: [10, 16, 14, 22, 28, 18, prescriptionsCount] }]} 
+                  series={[{ name: 'Prescriptions', data: prescriptionsTrend }]} 
                   type="line"
                   height={110}
                 />
@@ -553,7 +654,7 @@ const Dashboard = () => {
               <div className="card-body">
                 <Chart 
                   options={getTrendLineConfig('#8b5cf6')} 
-                  series={[{ name: 'Vaccinations', data: [5, 10, 8, 12, 16, 11, vaccinationsCount] }]} 
+                  series={[{ name: 'Vaccinations', data: vaccinationsTrend }]} 
                   type="line"
                   height={110}
                 />
@@ -589,22 +690,32 @@ const Dashboard = () => {
             </div>
             <div className="card-body">
               <div className="actions-grid">
-                <button className="action-btn green" onClick={() => handleQuickAction('patient')}>
+                <button className="action-btn green" onClick={() => handleQuickAction('patient')} disabled={getQuickActionState('patient').disabled}>
                   <UserPlus />
                   <span>Add Patient</span>
                 </button>
-                <button className="action-btn blue" onClick={() => handleQuickAction('consultation')}>
+                <button className="action-btn blue" onClick={() => handleQuickAction('consultation')} disabled={getQuickActionState('consultation').disabled}>
                   <Stethoscope />
                   <span>New Consultation</span>
                 </button>
-                <button className="action-btn orange" onClick={() => handleQuickAction('prescription')}>
+                <button className="action-btn orange" onClick={() => handleQuickAction('prescription')} disabled={getQuickActionState('prescription').disabled}>
                   <Pill />
                   <span>Add Prescription</span>
                 </button>
-                <button className="action-btn purple" onClick={() => handleQuickAction('vaccination')}>
+                <button className="action-btn purple" onClick={() => handleQuickAction('vaccination')} disabled={getQuickActionState('vaccination').disabled}>
                   <Syringe />
                   <span>Add Vaccination</span>
                 </button>
+              </div>
+
+              <div style={{ marginTop:'12px', fontSize:'13px', color:'var(--text-muted)' }}>
+                {dataError ? (
+                  <span>Live data unavailable: {dataError}</span>
+                ) : isLoadingData ? (
+                  <span>Loading live records from the backend…</span>
+                ) : (
+                  <span></span>
+                )}
               </div>
               
               <button 
@@ -640,7 +751,7 @@ const Dashboard = () => {
                 </div>
                 <div className="sync-info-row">
                   <span className="info-label">Connection Status</span>
-                  <span className="status-pill offline">Offline</span>
+                  <span className={`status-pill ${isOnline ? 'online' : 'offline'}`}>{isOnline ? 'Online' : 'Offline'}</span>
                 </div>
               </div>
 

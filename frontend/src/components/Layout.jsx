@@ -30,22 +30,19 @@ const Layout = ({ onLogout }) => {
 
   return (
     <div className="app-container">
-      <div className={`sidebar ${isSidebarMobileOpen ? 'open' : ''}`}>
-        <Sidebar onLogout={onLogout} />
-      </div>
-
-      {isSidebarMobileOpen && (
-        <div
-          className="modal-overlay"
-          style={{ zIndex: 90, backgroundColor: 'rgba(0,0,0,0.25)' }}
-          onClick={toggleSidebarMobile}
-        />
-      )}
+     <Sidebar onLogout={onLogout} isMobileOpen={isSidebarMobileOpen} />
 
       <div className="main-content">
         <Header onMenuClick={toggleSidebarMobile} />
         <Outlet />
       </div>
+
+      {isSidebarMobileOpen && (
+        <div
+          className="sidebar-overlay"
+          onClick={toggleSidebarMobile}
+        />
+      )}
 
       <div className={`toast ${toast.show ? 'show' : ''}`} role="status" aria-live="polite">
         <div className="toast-content">

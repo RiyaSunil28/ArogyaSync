@@ -11,12 +11,12 @@ const navItems = [
   { to:'/sync-center',   end:false, icon:RefreshCw,       label:'Sync Center',   hint:'Upload data' },
 ];
 
-const Sidebar = ({ onLogout }) => {
-  const { isOnline, pendingSync, lastSyncTime, toggleConnection } = useSync();
+const Sidebar = ({ onLogout, isMobileOpen }) => {
+  const { isOnline, pendingSync, lastSyncTime, toggleConnection, currentUser } = useSync();
   const location = useLocation();
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isMobileOpen ? 'open' : ''}`}>
       {/* Brand */}
       <div className="sidebar-header">
         <div className="logo-box">
@@ -89,8 +89,8 @@ const Sidebar = ({ onLogout }) => {
             </svg>
           </div>
           <div className="user-info">
-            <span className="user-name">Dr. Anjali Sharma</span>
-            <span className="user-role">Medical Officer</span>
+            <span className="user-name">{currentUser ? (currentUser.full_name || currentUser.username) : 'Dr. Anjali Sharma'}</span>
+            <span className="user-role">{currentUser ? (currentUser.role === 'DOCTOR' ? 'Medical Officer' : currentUser.role === 'NURSE' ? 'Community Nurse' : currentUser.role === 'ADMIN' ? 'Administrator' : currentUser.role) : 'Medical Officer'}</span>
           </div>
         </div>
         <button className="logout-btn" onClick={onLogout} aria-label="Log out">

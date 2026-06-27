@@ -103,30 +103,31 @@ const SyncCenter = () => {
               ) : (
                 <div style={{ marginTop:'14px' }}>
                   {/* Table header */}
-                  <div style={{ display:'grid', gridTemplateColumns:'1.2fr 1fr 1fr 1.5fr 1fr', gap:'8px', padding:'8px 14px', background:'var(--bg-body)', borderRadius:'8px', fontSize:'11px', fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'6px' }}>
-                    <span>Entity Type</span><span>Operation</span><span>Status</span><span>Timestamp</span><span>Error</span>
-                  </div>
+                 <div className="sync-queue-table-header" style={{ display:'grid', gridTemplateColumns:'1.2fr 1fr 1fr 1.5fr 1fr', gap:'8px', padding:'8px 14px', background:'var(--bg-body)', borderRadius:'8px', fontSize:'11px', fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'6px' }}>
+  <span>Entity Type</span><span>Operation</span><span>Status</span><span>Timestamp</span><span>Error</span>
+</div>
                   {/* Rows */}
                   <div style={{ display:'flex', flexDirection:'column', gap:'6px' }}>
                     {syncQueue.map((q, i) => (
-                      <div key={i} style={{ display:'grid', gridTemplateColumns:'1.2fr 1fr 1fr 1.5fr 1fr', gap:'8px', padding:'10px 14px', background:'#fff', border:'1px solid var(--border-color)', borderRadius:'9px', fontSize:'13px', alignItems:'center', transition:'background 0.18s' }}
-                        onMouseEnter={e=>e.currentTarget.style.background='#f8fbfd'}
-                        onMouseLeave={e=>e.currentTarget.style.background='#fff'}
-                      >
-                        <span style={{ fontWeight:500 }}>{q.entityType}</span>
-                        <span>
-                          <span style={{ background:(opStyle[q.operation]||{}).bg||'#e2e8f0', color:(opStyle[q.operation]||{}).color||'var(--text-muted)', padding:'2px 9px', borderRadius:'5px', fontSize:'11.5px', fontWeight:600 }}>
-                            {q.operation}
-                          </span>
-                        </span>
-                        <span>
-                          <span style={{ color:(statusStyle[q.syncStatus]||{}).color||'var(--text-muted)', fontWeight:600, fontSize:'12px' }}>
-                            {q.syncStatus}
-                          </span>
-                        </span>
-                        <span style={{ color:'var(--text-muted)', fontSize:'12px' }}>{q.timestamp}</span>
-                        <span style={{ color:'var(--color-red)', fontSize:'12px' }}>{q.errorMessage||'—'}</span>
-                      </div>
+                      
+                       <div key={i} className="sync-queue-row" style={{ display:'grid', gridTemplateColumns:'1.2fr 1fr 1fr 1.5fr 1fr', gap:'8px', padding:'10px 14px', background:'#fff', border:'1px solid var(--border-color)', borderRadius:'9px', fontSize:'13px', alignItems:'center', transition:'background 0.18s' }}
+  onMouseEnter={e=>e.currentTarget.style.background='#f8fbfd'}
+  onMouseLeave={e=>e.currentTarget.style.background='#fff'}
+>
+  <span style={{ fontWeight:500 }}>{q.entityType}</span>
+  <span>
+    <span style={{ background:(opStyle[q.operation]||{}).bg||'#e2e8f0', color:(opStyle[q.operation]||{}).color||'var(--text-muted)', padding:'2px 9px', borderRadius:'5px', fontSize:'11.5px', fontWeight:600 }}>
+      {q.operation}
+    </span>
+  </span>
+  <span>
+    <span style={{ color:(statusStyle[q.syncStatus]||{}).color||'var(--text-muted)', fontWeight:600, fontSize:'12px' }}>
+      {q.syncStatus}
+    </span>
+  </span>
+  <span style={{ color:'var(--text-muted)', fontSize:'12px' }}>{q.timestamp}</span>
+  <span style={{ color:'var(--color-red)', fontSize:'12px' }}>{q.errorMessage||'—'}</span>
+</div>
                     ))}
                   </div>
                 </div>

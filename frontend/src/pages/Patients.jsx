@@ -25,10 +25,10 @@ const Patients = () => {
     setIsOpen(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.age) return;
-    if (editId) { editPatient(editId, form); } else { addPatient(form); }
+    if (editId) { await editPatient(editId, form); } else { await addPatient(form); }
     setIsOpen(false); setForm(EMPTY_FORM); setEditId(null);
   };
 

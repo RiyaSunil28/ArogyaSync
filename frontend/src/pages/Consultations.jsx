@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSync } from '../context/useSyncContext';
 import { Stethoscope, X, RefreshCw, ClipboardList, Search, Pencil } from 'lucide-react';
 
-const EMPTY = { patientName:'', symptoms:'', diagnosis:'', doctorNotes:'' };
+const EMPTY = { patientId:'', symptoms:'', diagnosis:'', doctorNotes:'' };
 
 const Consultations = () => {
   const { consultationsList, patientsList, addConsultation, editConsultation, performSync, isSyncing } = useSync();
@@ -19,14 +19,20 @@ const Consultations = () => {
   const openNew = () => { setEditId(null); setForm(EMPTY); setIsOpen(true); };
   const openEdit = (c) => {
     setEditId(c.id);
-    setForm({ patientName:c.patientName, symptoms:c.symptoms||'', diagnosis:c.diagnosis, doctorNotes:c.doctorNotes||'' });
+    setForm({ patientId:c.patientId || '', symptoms:c.symptoms||'', diagnosis:c.diagnosis, doctorNotes:c.doctorNotes||'' });
     setIsOpen(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.patientName || !form.diagnosis) return;
-    if (editId) { editConsultation(editId, form); } else { addConsultation(form); }
+    if (!form.patientId || !form.diagnosis) return;
+    const payload = {
+      patient_id: form.patientId,
+      symptoms: form.symptoms,
+      diagnosis: form.diagnosis,
+      doctorNotes: form.doctorNotes,
+    };
+    if (editId) { await editConsultation(editId, payload); } else { await addConsultation(payload); }
     setIsOpen(false); setForm(EMPTY); setEditId(null);
   };
 
@@ -94,9 +100,9 @@ const Consultations = () => {
                 <div className="form-grid">
                   <div className="form-group">
                     <label>Select Patient</label>
-                    <select value={form.patientName} onChange={e=>setForm(f=>({...f,patientName:e.target.value}))} required>
+                    <select value={form.patientId} onChange={e=>setForm(f=>({...f,patientId:e.target.value}))} required>
                       <option value="">— Choose a patient —</option>
-                      {patientsList.map(p=><option key={p.id} value={p.name}>{p.name} ({p.id})</option>)}
+                      {patientsList.map(p=><option key={p.id} value={p.id}>{p.name} ({p.id})</option>)}
                     </select>
                   </div>
                   <div className="form-group">

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSync } from '../context/useSyncContext';
 import { Syringe, X, RefreshCw, Search, Pencil } from 'lucide-react';
 
-const EMPTY = { patientName:'', vaccine:'', batch:'', vaccinationDate:'', vacStatus:'Administered' };
+const EMPTY = { patientId:'', vaccine:'', batch:'', vaccinationDate:'', vacStatus:'Administered' };
 
 const Vaccinations = () => {
   const { vaccinationsList, patientsList, addVaccination, editVaccination, performSync, isSyncing } = useSync();
@@ -19,14 +19,26 @@ const Vaccinations = () => {
   const openNew  = () => { setEditId(null); setForm(EMPTY); setIsOpen(true); };
   const openEdit = (v) => {
     setEditId(v.id);
-    setForm({ patientName:v.patientName, vaccine:v.vaccine, batch:v.batch||'', vaccinationDate:v.vaccinationDate||'', vacStatus:v.vacStatus||'Administered' });
+    setForm({ 
+      patientId: v.patientId || '', 
+      vaccine: v.vaccine, 
+      batch: v.batch||'', 
+      vaccinationDate: v.vaccinationDate||'', 
+      vacStatus: v.vacStatus||'Administered' 
+    });
     setIsOpen(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.patientName || !form.vaccine) return;
-    if (editId) { editVaccination(editId, form); } else { addVaccination(form); }
+    if (!form.patientId || !form.vaccine) return;
+    const payload = {
+      patient_id: form.patientId,
+      vaccine: form.vaccine,
+      vaccinationDate: form.vaccinationDate,
+      vacStatus: form.vacStatus,
+    };
+    if (editId) { await editVaccination(editId, payload); } else { await addVaccination(payload); }
     setIsOpen(false); setForm(EMPTY); setEditId(null);
   };
 
@@ -122,9 +134,9 @@ const Vaccinations = () => {
                 <div className="form-grid">
                   <div className="form-group">
                     <label>Select Patient</label>
-                    <select value={form.patientName} onChange={e=>setForm(f=>({...f,patientName:e.target.value}))} required autoFocus>
+                    <select value={form.patientId} onChange={e=>setForm(f=>({...f,patientId:e.target.value}))} required autoFocus>
                       <option value="">— Choose a patient —</option>
-                      {patientsList.map(p=><option key={p.id} value={p.name}>{p.name} ({p.id})</option>)}
+                      {patientsList.map(p=><option key={p.id} value={p.id}>{p.name} ({p.id})</option>)}
                     </select>
                   </div>
                   <div className="form-row-2">

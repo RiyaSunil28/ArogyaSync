@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSync } from '../context/useSyncContext';
 import { Pill, X, RefreshCw, Search, Pencil } from 'lucide-react';
 
-const EMPTY = { patientName:'', consultationId:'', medicine:'', dosage:'', duration:'' };
+const EMPTY = { patientId:'', consultationId:'', medicine:'', dosage:'', duration:'' };
 
 const Prescriptions = () => {
   const { prescriptionsList, patientsList, consultationsList, addPrescription, editPrescription, performSync, isSyncing } = useSync();
@@ -18,15 +18,28 @@ const Prescriptions = () => {
 
   const openNew  = () => { setEditId(null); setForm(EMPTY); setIsOpen(true); };
   const openEdit = (p) => {
+    const consultationObj = consultationsList.find(c => c.id === p.consultationId);
     setEditId(p.id);
-    setForm({ patientName:p.patientName, consultationId:p.consultationId||'', medicine:p.medicine, dosage:p.dosage, duration:p.duration||'' });
+    setForm({ 
+      patientId: consultationObj ? consultationObj.patientId : '', 
+      consultationId: p.consultationId||'', 
+      medicine: p.medicine, 
+      dosage: p.dosage, 
+      duration: p.duration||'' 
+    });
     setIsOpen(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.patientName || !form.medicine || !form.dosage) return;
-    if (editId) { editPrescription(editId, form); } else { addPrescription(form); }
+    if (!form.consultationId || !form.medicine || !form.dosage) return;
+    const payload = {
+      consultationId: form.consultationId,
+      medicine: form.medicine,
+      dosage: form.dosage,
+      duration: form.duration,
+    };
+    if (editId) { await editPrescription(editId, payload); } else { await addPrescription(payload); }
     setIsOpen(false); setForm(EMPTY); setEditId(null);
   };
 
@@ -35,7 +48,7 @@ const Prescriptions = () => {
       <div className="page-title-box">
         <h2>Prescription Records</h2>
         <div style={{ display:'flex', gap:'10px' }}>
-          {/* Sync button — teal/green across all pages */}
+          {/* Sync button */}
           <button
             className="primary-btn"
             style={{ background:'var(--color-green)', boxShadow:'0 2px 8px rgba(13,158,110,0.25)' }}
@@ -46,7 +59,7 @@ const Prescriptions = () => {
             <span>{isSyncing ? 'Syncing…' : 'Sync Data'}</span>
           </button>
 
-          {/* Add button — orange (page accent) */}
+          {/* Add button */}
           <button
             className="primary-btn"
             style={{ background:'var(--color-orange)', boxShadow:'0 2px 8px rgba(249,115,22,0.25)' }}
@@ -143,17 +156,30 @@ const Prescriptions = () => {
               <div className="modal-body">
                 <div className="form-grid">
                   <div className="form-group">
-                    <label>Select Patient</label>
-                    <select value={form.patientName} onChange={e => setForm(f => ({ ...f, patientName:e.target.value }))} required autoFocus>
+                    <label>Select Patient *</label>
+                    <select 
+                      value={form.patientId} 
+                      onChange={e => setForm(f => ({ ...f, patientId:e.target.value, consultationId:'' }))} 
+                      required 
+                      autoFocus
+                    >
                       <option value="">— Choose a patient —</option>
-                      {patientsList.map(p => <option key={p.id} value={p.name}>{p.name} ({p.id})</option>)}
+                      {patientsList.map(p => <option key={p.id} value={p.id}>{p.name} ({p.id})</option>)}
                     </select>
                   </div>
                   <div className="form-group">
-                    <label>Linked Consultation <span style={{ fontWeight:400, color:'var(--text-light)' }}>(optional)</span></label>
-                    <select value={form.consultationId} onChange={e => setForm(f => ({ ...f, consultationId:e.target.value }))}>
-                      <option value="">— None —</option>
-                      {consultationsList.map(c => <option key={c.id} value={c.id}>{c.id} — {c.patientName} ({c.diagnosis})</option>)}
+                    <label>Linked Consultation *</label>
+                    <select 
+                      value={form.consultationId} 
+                      onChange={e => setForm(f => ({ ...f, consultationId:e.target.value }))} 
+                      required
+                      disabled={!form.patientId}
+                    >
+                      <option value="">{form.patientId ? '— Choose a consultation —' : '— Select a patient first —'}</option>
+                      {consultationsList
+                        .filter(c => c.patientId === form.patientId)
+                        .map(c => <option key={c.id} value={c.id}>{c.id} ({c.diagnosis})</option>)
+                      }
                     </select>
                   </div>
                   <div className="form-group">

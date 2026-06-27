@@ -234,6 +234,12 @@ body {
   animation: pulse-red 2s infinite;
 }
 
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 99;
+}
 .status-text { font-size: 13px; font-weight: 600; color: #ffffff; }
 
 .wifi-icon { width: 15px; height: 15px; color: #6b8fa3; }
@@ -1374,10 +1380,82 @@ body {
     position: fixed;
     left: 0; top: 0; bottom: 0;
     transform: translateX(-100%);
+    /* Remove height:100vh — fixed+top+bottom already handles it */
+    height: 100%;
   }
-  .sidebar.open { transform: translateX(0); }
-  .content-header  { padding: 14px 16px; }
-  .dashboard-body  { padding: 16px; }
+
+  .sidebar.open {
+    transform: translateX(0);
+    /* Sidebar overlays; main content stays untouched beneath */
+  }
+
+  /* Ensure main content is NEVER affected by sidebar state */
+  .main-content {
+    width: 100%;
+    height: 100vh;
+    overflow-y: auto;
+    /* No transform, no push, no margin change */
+  }
+
+  .app-container {
+    /* Stay as flex row — sidebar floats above via fixed positioning */
+    overflow: hidden;
+  }
+
+  .content-header { padding: 14px 16px; }
+  .dashboard-body { padding: 16px; }
+
+  .form-row-2 { grid-template-columns: 1fr; }
+
+  .modal-content {
+    width: 95% !important;
+    max-width: 95%;
+    padding: 0;
+  }
+
+  .page-title-box {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .page-title-box > div {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+
+  .records-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .records-table { min-width: 600px; }
+
+  /* ── SyncCenter: stack right column below left on mobile ── */
+  .core-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .right-column {
+    position: static;
+  }
+
+  /* ── SyncCenter queue table: hide fixed-grid header, show card rows ── */
+  .sync-queue-table-header {
+    display: none !important;
+  }
+
+  .sync-queue-row {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .sync-queue-row {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 @media (max-width: 576px) {
@@ -1388,3 +1466,4 @@ body {
   .distribution-card .card-body.flex-row { flex-direction: column; }
   .header-right .datetime-pill { display: none; }
 }
+

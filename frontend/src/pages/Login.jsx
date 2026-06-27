@@ -1,6 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, LogIn, Wifi, UserPlus, KeyRound, ArrowLeft, Mail } from 'lucide-react';
+import {
+  Eye,
+  EyeOff,
+  LogIn,
+  UserPlus,
+  ArrowLeft,
+  Wifi,
+  KeyRound,
+  Mail
+} from 'lucide-react';
+import { authApi } from '../services/api';
 
 /* ─── shared input style ─── */
 const inp = {
@@ -56,22 +66,14 @@ const LoginView = ({ onLogin, onRegister, onForgot }) => {
     if (!username || !password) { setError('Please enter both username and password.'); return; }
     setLoading(true);
     try {
-      /* ── Real API call ──────────────────────────────
-         const res = await fetch('/api/v1/auth/login', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({ username, password }),
-         });
-         if (!res.ok) throw new Error('Invalid credentials');
-         const { token } = await res.json();
-         localStorage.setItem('jwt_token', token);
-      ─────────────────────────────────────────────── */
-      await new Promise(r => setTimeout(r, 900));
-      localStorage.setItem('jwt_token', 'mock_jwt_token_arogya');
+      const response = await authApi.login(username, password);
+      const token = response?.access_token;
+      if (!token) throw new Error('Missing token');
+      localStorage.setItem('jwt_token', token);
       if (onLogin) onLogin();
       navigate('/');
-    } catch {
-      setError('Incorrect username or password. Please try again.');
+    } catch (err) {
+      setError(err.message || 'Incorrect username or password. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -167,23 +169,16 @@ const RegisterView = ({ onBack }) => {
 
     setLoading(true);
     try {
-      /* ── Real API call ──────────────────────────────
-         const res = await fetch('/api/v1/auth/register', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({
-             fullName: form.fullName, role: form.role,
-             username: form.username, password: form.password,
-             facilityCode: form.facilityCode,
-           }),
-         });
-         if (!res.ok) throw new Error('Registration failed');
-      ─────────────────────────────────────────────── */
-      await new Promise(r => setTimeout(r, 1000));
+      await authApi.register({
+        username: form.username,
+        full_name: form.fullName,
+        role: form.role.toUpperCase().replace(/\s+/g, '_'),
+        password: form.password,
+      });
       setSuccess('Account created successfully! You can now sign in with your credentials.');
       setForm({ fullName:'', role:'Medical Officer', username:'', password:'', confirm:'', facilityCode:'' });
-    } catch {
-      setError('Registration failed. Please check your facility code or try again.');
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }

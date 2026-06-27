@@ -13,7 +13,8 @@ const Header = ({ onMenuClick }) => {
     isOnline,
     toggleConnection,
     currentTime,
-    currentDate
+    currentDate,
+    currentUser
   } = useSync();
 
   return (
@@ -27,7 +28,7 @@ const Header = ({ onMenuClick }) => {
           <MapPin className="location-icon" />
           <div>
             <h2>Primary Health Centre</h2>
-            <span className="header-greeting">{getGreeting()}, Dr. Anjali</span>
+            <span className="header-greeting">{getGreeting()}, {currentUser ? (currentUser.full_name || currentUser.username) : 'Dr. Anjali Sharma'}</span>
           </div>
         </div>
       </div>
