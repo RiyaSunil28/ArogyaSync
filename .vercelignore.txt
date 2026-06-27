@@ -1,0 +1,6 @@
+requirements.txt
+app/
+migrations/
+tests/
+*.py
+*.db
