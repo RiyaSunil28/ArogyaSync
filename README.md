@@ -1,93 +1,137 @@
-ArogyaSync 🏥
+# ArogyaSync 🏥
+### Offline-First Patient Record Management for Rural PHCs
 
-An offline-first Patient Record Management System designed for rural Primary Health Centres (PHCs) in India.
+> Developed under the **IEEE EMBS Pune Chapter Internship Program**
+> **Team AJR** — Riya Elizabeth Sunil · Ananthu Mohan · Jagan J P
+> Mentor: Sai Varun Chandrashekar
 
-📋 About
+[![Live Demo](https://img.shields.io/badge/Frontend-Vercel-black?logo=vercel)](https://arogya-sync-5tyj.vercel.app)
+[![API Docs](https://img.shields.io/badge/API-Swagger-green?logo=swagger)](https://arogyasync-backend.onrender.com/docs)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE.txt)
 
-ArogyaSync enables healthcare workers to manage patient records even without internet connectivity. Data is stored locally and automatically synced to the cloud database when connection is restored.
+---
 
-✨ Features
+## About
 
-🔐 Authentication — Secure login with JWT tokens
+ArogyaSync is a browser-based healthcare management system built for **Primary Health Centres (PHCs) in rural India**, where internet access is frequently unavailable or unreliable.
 
-👥 Patient Management — Add, edit, search, and delete patient records
+Healthcare workers can register patients, record consultations, issue prescriptions, and log vaccinations — all **without any internet connection**. Data is stored locally on the device and automatically synced to the central cloud database the moment connectivity is restored, with no manual action required.
 
-🩺 Consultations — Track doctor visits and diagnoses
+---
 
-💊 Prescriptions — Manage medicine orders linked to consultations
+## Key Features
 
-💉 Vaccinations — Record and track vaccination doses
+| Feature | Description |
+|---|---|
+| 🔌 Offline-First | All modules work fully without internet |
+| 🔄 Auto Sync | Queue-based sync engine pushes local records to cloud on reconnection |
+| 👤 Patient Management | Register and manage patient profiles with UUID-based linking |
+| 🩺 Consultations | Log symptoms, diagnosis, and clinical notes per visit |
+| 💊 Prescriptions | Issue prescriptions linked to specific consultations |
+| 💉 Vaccinations | Track vaccine name, batch number, date, and status |
+| 📊 Dashboard | Live analytics — patient counts, visit trends, sync health |
+| 🔒 Role-Based Auth | JWT authentication with role-based access control |
+| 📡 Sync Center | Monitor queue, connection status, and retry failed records |
 
-🔄 Offline-First Sync — Works without internet, auto-syncs when online
+---
 
-📊 Sync Center — Monitor sync queue, retry failed records
+## System Architecture
 
-📱 Mobile Responsive — Works on all screen sizes
+ArogyaSync uses a **six-layer architecture**:
 
-🛠️ Tech Stack
+```
+User Layer          →  Doctors, nurses, health officers (any browser)
+Application Layer   →  React + Vite frontend (6 modules)
+Offline Layer       →  SQLite local database (local_phc.db)
+Synchronization     →  Queue-based sync engine
+Server Layer        →  FastAPI backend (JWT auth, REST API)
+Database Layer      →  PostgreSQL on Render (cloud source of truth)
+```
 
-Frontend
+---
 
-React + Vite
+## Technology Stack
 
-React Router
+### Frontend
+| Library | Version |
+|---|---|
+| React | 19.2.7 |
+| Vite | 8.0.16 |
+| React Router DOM | 7.18.0 |
+| ApexCharts | 5.15.0 |
+| react-apexcharts | 2.1.0 |
+| Lucide React | 1.21.0 |
 
-Context API (SyncContext)
+### Backend
+| Library | Version |
+|---|---|
+| Python | 3.13 |
+| FastAPI | 0.137.2 |
+| Uvicorn | 0.30.1 |
+| SQLAlchemy | ≥2.0.40 |
+| Pydantic | 2.13.4 |
+| pydantic-settings | 2.3.1 |
+| Alembic | 1.13.1 |
+| python-jose | 3.3.0 |
+| passlib | 1.7.4 |
+| bcrypt | 4.1.3 |
+| psycopg[binary] | latest |
 
-Lucide React Icons
+### Databases
+| | |
+|---|---|
+| Local | SQLite (`local_phc.db`) |
+| Cloud | PostgreSQL (hosted on Render) |
 
-Backend
+---
 
-FastAPI (Python)
+## Getting Started
 
-SQLAlchemy ORM
+### Prerequisites
+- Node.js ≥ 18
+- Python 3.13
+- npm
 
-SQLite (local offline database)
-
-PostgreSQL (cloud database)
-
-JWT Authentication
-
-🚀 How to Run Locally
-
-Backend
-
-cd arogyasync-final
-
-python -m uvicorn app.main:app --reload
-
-Frontend
-
+### Frontend Setup
+```bash
 cd frontend
-
 npm install
-
 npm run dev
+```
 
-Open http://localhost:5173 in your browser.
+### Backend Setup
+```bash
+cd app
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
 
-🔄 Offline Sync Flow
+### Environment Variables
+Create a `.env` file in the root directory:
+```
+DATABASE_URL=postgresql://...
+SECRET_KEY=your_secret_key
+```
 
-Data entered offline → saved to local SQLite database
+---
 
-Records queued in sync queue with status Pending
+## Deployment
 
-When connection restored → background sync triggers automatically
+| Service | Platform |
+|---|---|
+| Frontend | [Vercel](https://arogya-sync-5tyj.vercel.app) |
+| Backend + DB | [Render](https://arogyasync-backend.onrender.com) |
+| API Docs | [Swagger UI](https://arogyasync-backend.onrender.com/docs) |
 
-Records transferred to cloud PostgreSQL
+---
 
-Sync status updated to Synced
+## Testing Results
 
-👥 Team
+End-to-end offline sync test: **21 patient records** entered with no internet connection → all 21 automatically synchronized to cloud on reconnection → **100% sync health**, 0 records pending.
 
-Name Role
+---
 
-Riya Sunil Frontend Developer
+## License
 
-Ananthu Mohan Backend Developer
-
-Jagan J P Literature Survey & Backend
-
-🏫 Internship Project
-
-Built as part of IEEE internship — June 2026
+This project is licensed under the **GNU General Public License v3.0**.
+See [LICENSE.txt](LICENSE.txt) for details.
