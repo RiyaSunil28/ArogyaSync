@@ -6,7 +6,7 @@
 > Mentor: Sai Varun Chandrashekar
 
 [![Live Demo](https://img.shields.io/badge/Frontend-Vercel-black?logo=vercel)](https://arogya-sync-5tyj.vercel.app)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE.txt)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 ---
 
