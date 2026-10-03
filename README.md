@@ -133,4 +133,4 @@ End-to-end offline sync test: **21 patient records** entered with no internet co
 ## License
 
 This project is licensed under the **GNU General Public License v3.0**.
-See [LICENSE.txt](LICENSE.txt) for details.
+See [LICENSE](LICENSE) for details.
