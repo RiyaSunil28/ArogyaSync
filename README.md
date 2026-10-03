@@ -84,33 +84,12 @@ Database Layer      →  PostgreSQL on Render (cloud source of truth)
 
 ---
 
-## Getting Started
+## 🌐 Live Demo
 
-### Prerequisites
-- Node.js ≥ 18
-- Python 3.13
-- npm
-
-### Frontend Setup
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### Backend Setup
-```bash
-cd app
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-### Environment Variables
-Create a `.env` file in the root directory:
-```
-DATABASE_URL=postgresql://...
-SECRET_KEY=your_secret_key
-```
+| | Link |
+|---|---|
+| **Frontend** | [https://arogya-sync-5tyj.vercel.app](https://arogya-sync-5tyj.vercel.app) |
+| **API Docs** | [https://arogyasync-backend.onrender.com/docs](https://arogyasync-backend.onrender.com/docs) |
 
 ---
 
